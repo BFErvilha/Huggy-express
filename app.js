@@ -1,17 +1,26 @@
 const dotenv = require('dotenv');
-dotenv.config();
 const express = require('express');
-const request = require('request');
 const cors = require('cors');
 const axios = require('axios');
 const bodyParser = require('body-parser');
+const sslRedirect = require('express-sslify');
 
+dotenv.config();
 const app = express();
+
+// Redirecionar todas as solicitações HTTP para HTTPS
+if (process.env.NODE_ENV === 'production') {
+  app.use(sslRedirect.HTTPS({ trustProtoHeader: true }));
+}
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.use(cors());
+const corsOptions = {
+  origin: '*',
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -42,7 +51,7 @@ app.get('/access-token/:code', (req, res) => {
     });
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`Servidor Express rodando na porta ${PORT}`);
